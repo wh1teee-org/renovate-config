@@ -48,7 +48,7 @@ Run:
 
 ```sh
 node scripts/test-presets.mjs
-npm exec --yes --package=renovate@43.263.5 -- renovate-config-validator --strict default.json node.json konergy.json athleteos.json
+npm exec --yes --package=renovate@43.263.5 -- renovate-config-validator --strict --no-global default.json node.json konergy.json athleteos.json
 ```
 
 Rollback is additive and reversible: remove the consumer `renovate.json`, or

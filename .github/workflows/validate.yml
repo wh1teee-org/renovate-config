@@ -28,5 +28,5 @@ jobs:
       - name: Validate Renovate configuration
         run: >-
           npm exec --yes --package=renovate@43.263.5 --
-          renovate-config-validator --strict
+          renovate-config-validator --strict --no-global
           default.json node.json konergy.json athleteos.json
