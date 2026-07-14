@@ -13,13 +13,17 @@ Node/pnpm repositories extend the common and Node presets:
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "github>wh1teee-org/renovate-config",
-    "github>wh1teee-org/renovate-config:node"
+    "github>wh1teee-org/renovate-config:node",
+    "github>wh1teee-org/renovate-config:pnpm"
   ]
 }
 ```
 
-Konergy additionally extends `github>wh1teee-org/renovate-config:konergy` so
-`packages/llm/**` remains untouched. AthleteOS extends the common and
+Konergy extends the common, `node`, and `konergy` presets, but intentionally
+does not extend `pnpm`: lockfile maintenance and dedupe are disabled, every
+update requires human merge, and `packages/llm/**` remains an immutable
+boundary. Any ordinary dependency PR that changes the deprecated workspace's
+shared-lockfile resolution must be rejected. AthleteOS extends the common and
 `athleteos` presets; that preset enables only its Python, uv, Gradle, Docker,
 and GitHub Actions managers and intentionally excludes npm.
 
@@ -41,7 +45,9 @@ only `PayAtTable`, `ride-os`, `athleteos`, and `konergy`. The protected personal
 - Compatibility families are grouped; majors, native ABI packages, database,
   auth, and security-sensitive changes remain reviewed.
 - Only mature dev-only patch updates may automerge, after seven release days and
-  required checks pass. All other updates remain human-merged.
+  required checks pass. They always merge through a PR and never use GitHub's
+  platform-native automerge. All other updates remain human-merged; Konergy
+  never automerges.
 - Branch creation is limited to Minsk nights/weekends. Two commits per hour per
   repository prevents rebase storms while host admission controls actual runner
   capacity.
@@ -52,7 +58,8 @@ Run:
 
 ```sh
 node scripts/test-presets.mjs
-npm exec --yes --package=renovate@43.263.5 -- renovate-config-validator --strict --no-global default.json node.json konergy.json athleteos.json
+npm exec --yes --package=renovate@43.263.5 -- renovate-config-validator --strict --no-global default.json node.json pnpm.json konergy.json athleteos.json
+node scripts/test-renovate-fixture.mjs
 ```
 
 Rollback is additive and reversible: remove the consumer `renovate.json`, or

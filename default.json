@@ -20,6 +20,8 @@
   "rangeStrategy": "pin",
   "pinDigests": true,
   "internalChecksFilter": "strict",
+  "ignoreTests": false,
+  "platformAutomerge": false,
   "prCreation": "not-pending",
   "prConcurrentLimit": 6,
   "branchConcurrentLimit": 6,
@@ -67,7 +69,7 @@
       "minimumReleaseAge": "7 days",
       "automerge": true,
       "automergeType": "pr",
-      "platformAutomerge": true
+      "platformAutomerge": false
     },
     {
       "description": "Keep security-sensitive packages out of broad groups and human-reviewed",

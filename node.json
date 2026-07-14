@@ -1,8 +1,5 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "postUpdateOptions": [
-    "pnpmDedupe"
-  ],
   "packageRules": [
     {
       "description": "Keep peer dependency declarations compatible instead of exact-pinning them",
@@ -63,7 +60,7 @@
       "matchPackageNames": [
         "@typescript/typescript6"
       ],
-      "allowedVersions": ">=6.0.0 <7.0.0",
+      "allowedVersions": ">=6.0.0 <6.1.0",
       "groupName": "typescript 6 api lane",
       "dependencyDashboardApproval": true,
       "automerge": false

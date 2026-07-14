@@ -25,8 +25,13 @@ jobs:
       - name: Verify fleet policy invariants
         run: node scripts/test-presets.mjs
 
+      - name: Verify effective fixture policy
+        run: node scripts/test-renovate-fixture.mjs
+        env:
+          RENOVATE_GITHUB_COM_TOKEN: ${{ github.token }}
+
       - name: Validate Renovate configuration
         run: >-
           npm exec --yes --package=renovate@43.263.5 --
           renovate-config-validator --strict --no-global
-          default.json node.json konergy.json athleteos.json
+          default.json node.json pnpm.json konergy.json athleteos.json
