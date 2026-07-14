@@ -163,6 +163,7 @@ try {
     ordinary: caseFor("prettier", "prettier", "devDependencies", "3.9.4"),
     security: caseFor("better-auth", "better-auth", "devDependencies", "1.6.0"),
     native: caseFor("sharp", "sharp", "devDependencies", "0.34.4"),
+    eslint: caseFor("eslint", "eslint", "devDependencies", "9.39.3"),
     ts6: caseFor("typescript", "@typescript/typescript6", "devDependencies", "6.0.1"),
     ts7: caseFor("@typescript/native", "typescript", "devDependencies", "7.0.2"),
     turbo: caseFor("turbo", "turbo", "devDependencies", "2.10.4"),
@@ -171,14 +172,19 @@ try {
     peer: caseFor("react", "react", "peerDependencies", "18.0.0", "major"),
     prisma: caseFor("@prisma/client", "@prisma/client", "dependencies", "7.7.0"),
     pnpmAction: caseFor("pnpm/action-setup", "pnpm/action-setup", "action", "6.0.9"),
+    nodeRuntime: caseFor("node", "node", "engines", "24.18.0"),
   };
+
+  for (const name of ["ordinary", "security", "native", "eslint", "turbo", "vite", "vitest", "prisma"]) {
+    assert.ok(findDependency(cases[name].depName, cases[name].depType), `${name} must come from the Renovate fixture lookup`);
+  }
 
   const ordinary = effectiveRule(effective, cases.ordinary);
   assert.equal(ordinary.automerge, true, "ordinary mature dev patches should be the only automerge lane");
   assert.equal(ordinary.automergeType, "pr");
   assert.equal(ordinary.platformAutomerge, false);
 
-  for (const name of ["security", "native", "ts6", "ts7", "turbo", "vite", "vitest"]) {
+  for (const name of ["security", "native", "eslint", "ts6", "ts7", "turbo", "vite", "vitest", "pnpmAction", "nodeRuntime"]) {
     assert.equal(effectiveRule(effective, cases[name]).automerge, false, `${name} updates must never automerge`);
   }
   assert.equal(effectiveRule(effective, cases.ts6).groupName, "typescript 6 api lane");
@@ -187,6 +193,7 @@ try {
   assert.equal(effectiveRule(effective, cases.vitest).groupName, "vite and vitest");
   assert.equal(effectiveRule(effective, cases.prisma).groupName, "prisma");
   assert.equal(effectiveRule(effective, cases.pnpmAction).groupName, "pnpm setup action");
+  assert.equal(effectiveRule(effective, cases.nodeRuntime).groupName, "node 24 runtime");
 
   const assertPeerConflictRejected = (config) => {
     const peer = effectiveRule(config, cases.peer);
