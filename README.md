@@ -30,6 +30,10 @@ only `PayAtTable`, `ride-os`, `athleteos`, and `konergy`. The protected personal
 ## Policy
 
 - Direct dependency declarations and container/action references are pinned.
+- Renovate does not update the Corepack `packageManager` field because upstream
+  issue [renovatebot/renovate#37772](https://github.com/renovatebot/renovate/issues/37772)
+  still drops its `+sha512` integrity. pnpm version and integrity move together
+  only in reviewed toolchain PRs; the setup action remains independently managed.
 - pnpm catalogs stay repo-local; Renovate updates them through the npm manager
   and runs `pnpmDedupe` after lockfile changes.
 - TypeScript's TS6 compiler-API alias and TS7 native typecheck alias are separate

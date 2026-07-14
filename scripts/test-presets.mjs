@@ -37,8 +37,11 @@ assert.deepEqual(ts7Rule?.matchPackageNames, ["typescript"]);
 assert.equal(ts7Rule?.allowedVersions, ">=7.0.0 <8.0.0");
 assert.notEqual(ts6Rule?.groupName, ts7Rule?.groupName, "TS6 API and TS7 native updates must never share a branch");
 
-const pnpmCapRule = nodeRules.find((rule) => rule.allowedVersions === ">=11.0.0 <12.0.0");
-assert.deepEqual(pnpmCapRule?.matchPackageNames, ["pnpm"], "the pnpm major cap must not block action versions");
+const packageManagerRule = nodeRules.find((rule) => rule.matchDepTypes?.includes("packageManager"));
+assert.equal(packageManagerRule?.enabled, false, "Renovate must not strip the Corepack packageManager integrity hash");
+
+const pnpmActionRule = nodeRules.find((rule) => rule.groupName === "pnpm setup action");
+assert.deepEqual(pnpmActionRule?.matchPackageNames, ["pnpm/action-setup"]);
 
 assert.ok(node.postUpdateOptions.includes("pnpmDedupe"), "pnpm lockfiles must be deduplicated after updates");
 assert.deepEqual(konergy.ignorePaths, ["packages/llm/**"], "deprecated Konergy LLM code must remain untouched");

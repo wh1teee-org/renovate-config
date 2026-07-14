@@ -26,20 +26,21 @@
       "automerge": false
     },
     {
-      "description": "Keep the pnpm packageManager and setup action in one toolchain branch",
-      "matchPackageNames": [
-        "pnpm",
-        "pnpm/action-setup"
+      "description": "Preserve the Corepack packageManager integrity hash until Renovate supports it",
+      "matchManagers": [
+        "npm"
       ],
-      "groupName": "pnpm 11 toolchain",
-      "automerge": false
+      "matchDepTypes": [
+        "packageManager"
+      ],
+      "enabled": false
     },
     {
-      "description": "Keep pnpm itself in the supported major lane",
+      "description": "Update the pnpm setup action independently of the integrity-pinned packageManager",
       "matchPackageNames": [
-        "pnpm"
+        "pnpm/action-setup"
       ],
-      "allowedVersions": ">=11.0.0 <12.0.0",
+      "groupName": "pnpm setup action",
       "automerge": false
     },
     {
