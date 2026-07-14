@@ -1,0 +1,192 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "postUpdateOptions": [
+    "pnpmDedupe"
+  ],
+  "packageRules": [
+    {
+      "description": "Keep peer dependency declarations compatible instead of exact-pinning them",
+      "matchManagers": [
+        "npm"
+      ],
+      "matchDepTypes": [
+        "peerDependencies"
+      ],
+      "rangeStrategy": "widen",
+      "automerge": false
+    },
+    {
+      "description": "Keep the supported Node 24 runtime and matching types together",
+      "matchPackageNames": [
+        "node",
+        "@types/node"
+      ],
+      "allowedVersions": ">=24.0.0 <25.0.0",
+      "groupName": "node 24 runtime",
+      "automerge": false
+    },
+    {
+      "description": "Keep the pnpm packageManager and setup action in one toolchain branch",
+      "matchPackageNames": [
+        "pnpm",
+        "pnpm/action-setup"
+      ],
+      "groupName": "pnpm 11 toolchain",
+      "automerge": false
+    },
+    {
+      "description": "Keep pnpm itself in the supported major lane",
+      "matchPackageNames": [
+        "pnpm"
+      ],
+      "allowedVersions": ">=11.0.0 <12.0.0",
+      "automerge": false
+    },
+    {
+      "description": "Keep Turbo in the supported major lane",
+      "matchPackageNames": [
+        "turbo"
+      ],
+      "allowedVersions": ">=2.0.0 <3.0.0",
+      "groupName": "turborepo toolchain",
+      "automerge": false
+    },
+    {
+      "description": "Keep the TypeScript compiler API dependency on TS6",
+      "matchManagers": [
+        "npm"
+      ],
+      "matchDepNames": [
+        "typescript"
+      ],
+      "matchPackageNames": [
+        "@typescript/typescript6"
+      ],
+      "allowedVersions": ">=6.0.0 <7.0.0",
+      "groupName": "typescript 6 api lane",
+      "dependencyDashboardApproval": true,
+      "automerge": false
+    },
+    {
+      "description": "Keep native product typechecking on the TS7 package alias",
+      "matchManagers": [
+        "npm"
+      ],
+      "matchDepNames": [
+        "@typescript/native"
+      ],
+      "matchPackageNames": [
+        "typescript"
+      ],
+      "allowedVersions": ">=7.0.0 <8.0.0",
+      "groupName": "typescript 7 native lane",
+      "dependencyDashboardApproval": true,
+      "automerge": false
+    },
+    {
+      "description": "Keep Vite and Vitest compatibility packages together",
+      "matchPackageNames": [
+        "vite",
+        "vitest",
+        "/^@vitejs\\//",
+        "/^@vitest\\//"
+      ],
+      "groupName": "vite and vitest",
+      "automerge": false
+    },
+    {
+      "description": "Keep React runtime and type packages together",
+      "matchPackageNames": [
+        "react",
+        "react-dom",
+        "@types/react",
+        "@types/react-dom"
+      ],
+      "groupName": "react runtime",
+      "automerge": false
+    },
+    {
+      "description": "Keep Next.js peers together",
+      "matchPackageNames": [
+        "next",
+        "eslint-config-next",
+        "/^@next\\//"
+      ],
+      "groupName": "next.js",
+      "automerge": false
+    },
+    {
+      "description": "Keep Prisma runtime, CLI, and adapters atomic and reviewed",
+      "matchPackageNames": [
+        "prisma",
+        "@prisma/client",
+        "/^@prisma\\/adapter-/",
+        "@prisma/driver-adapter-utils"
+      ],
+      "groupName": "prisma",
+      "dependencyDashboardApproval": true,
+      "automerge": false
+    },
+    {
+      "description": "Keep Nest packages in one compatibility family",
+      "matchPackageNames": [
+        "/^@nestjs\\//"
+      ],
+      "groupName": "nestjs",
+      "automerge": false
+    },
+    {
+      "description": "Keep ESLint 9 and typescript-eslint 8 compatible with the TS6 API lane",
+      "matchPackageNames": [
+        "eslint",
+        "typescript-eslint",
+        "/^@eslint\\//",
+        "/^@typescript-eslint\\//"
+      ],
+      "groupName": "eslint toolchain",
+      "automerge": false
+    },
+    {
+      "description": "Do not propose ESLint 10 until repository plugin compatibility is proven",
+      "matchPackageNames": [
+        "eslint"
+      ],
+      "allowedVersions": ">=9.0.0 <10.0.0",
+      "automerge": false
+    },
+    {
+      "description": "Do not cross the current typescript-eslint major lane",
+      "matchPackageNames": [
+        "typescript-eslint",
+        "/^@typescript-eslint\\//"
+      ],
+      "allowedVersions": ">=8.0.0 <9.0.0",
+      "automerge": false
+    },
+    {
+      "description": "Keep Playwright and its browser package together",
+      "matchPackageNames": [
+        "playwright",
+        "playwright-core",
+        "@playwright/test"
+      ],
+      "groupName": "playwright",
+      "automerge": false
+    },
+    {
+      "description": "Keep native ABI packages isolated and human-reviewed",
+      "matchPackageNames": [
+        "esbuild",
+        "sharp",
+        "better-sqlite3",
+        "canvas",
+        "argon2",
+        "bcrypt",
+        "/^@swc\\//"
+      ],
+      "groupName": null,
+      "dependencyDashboardApproval": true,
+      "automerge": false
+    }
+  ]
+}

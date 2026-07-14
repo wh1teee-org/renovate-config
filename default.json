@@ -1,0 +1,87 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:best-practices"
+  ],
+  "timezone": "Europe/Minsk",
+  "schedule": [
+    "* 22-23,0-5 * * 1-5",
+    "* * * * 0,6"
+  ],
+  "updateNotScheduled": false,
+  "dependencyDashboard": true,
+  "dependencyDashboardAutoclose": true,
+  "dependencyDashboardLabels": [
+    "dependencies"
+  ],
+  "labels": [
+    "dependencies"
+  ],
+  "rangeStrategy": "pin",
+  "pinDigests": true,
+  "internalChecksFilter": "strict",
+  "prCreation": "not-pending",
+  "prConcurrentLimit": 6,
+  "branchConcurrentLimit": 6,
+  "prHourlyLimit": 2,
+  "commitHourlyLimit": 2,
+  "rebaseWhen": "behind-base-branch",
+  "rollbackPrs": true,
+  "separateMajorMinor": true,
+  "lockFileMaintenance": {
+    "enabled": true,
+    "automerge": false,
+    "schedule": [
+      "* 0-5 * * 1"
+    ]
+  },
+  "packageRules": [
+    {
+      "description": "Require dashboard approval for breaking major updates",
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "dependencyDashboardApproval": true,
+      "automerge": false
+    },
+    {
+      "description": "Treat pre-1.0 minor updates as potentially breaking",
+      "matchCurrentVersion": "/^0\\./",
+      "matchUpdateTypes": [
+        "minor"
+      ],
+      "dependencyDashboardApproval": true,
+      "automerge": false
+    },
+    {
+      "description": "Automerge only mature dev-only patches after seven days and green checks",
+      "matchDepTypes": [
+        "devDependencies",
+        "dev-dependencies",
+        "dev"
+      ],
+      "matchCurrentVersion": "!/^0/",
+      "matchUpdateTypes": [
+        "patch"
+      ],
+      "minimumReleaseAge": "7 days",
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
+    },
+    {
+      "description": "Keep security-sensitive packages out of broad groups and human-reviewed",
+      "matchPackageNames": [
+        "/(^|[-/])(auth|crypto|cryptography|jsonwebtoken|jose|oauth|openid|passport|saml)([-/]|$)/",
+        "bcrypt",
+        "bcryptjs",
+        "argon2",
+        "better-auth",
+        "/^@better-auth\\//"
+      ],
+      "groupName": null,
+      "automerge": false,
+      "prPriority": 20
+    }
+  ]
+}

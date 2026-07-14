@@ -1,0 +1,55 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "enabledManagers": [
+    "docker-compose",
+    "dockerfile",
+    "github-actions",
+    "gradle",
+    "gradle-wrapper",
+    "pep621",
+    "pyenv",
+    "runtime-version"
+  ],
+  "packageRules": [
+    {
+      "description": "Keep uv references together across workflows and images",
+      "matchPackageNames": [
+        "uv",
+        "astral-sh/uv",
+        "ghcr.io/astral-sh/uv"
+      ],
+      "groupName": "uv toolchain",
+      "automerge": false
+    },
+    {
+      "description": "Keep FastAPI and Pydantic compatibility packages together",
+      "matchPackageNames": [
+        "fastapi",
+        "pydantic",
+        "pydantic-settings"
+      ],
+      "groupName": "fastapi and pydantic",
+      "automerge": false
+    },
+    {
+      "description": "Keep Android build toolchain upgrades atomic and reviewed",
+      "matchPackageNames": [
+        "gradle",
+        "com.android.tools.build:gradle",
+        "/^org\\.jetbrains\\.kotlin/"
+      ],
+      "groupName": "android build toolchain",
+      "dependencyDashboardApproval": true,
+      "automerge": false
+    },
+    {
+      "description": "Require review for Python runtime lane changes",
+      "matchPackageNames": [
+        "python"
+      ],
+      "groupName": "python runtime",
+      "dependencyDashboardApproval": true,
+      "automerge": false
+    }
+  ]
+}
