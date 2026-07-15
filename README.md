@@ -19,17 +19,44 @@ Node/pnpm repositories extend the common and Node presets:
 }
 ```
 
-Konergy extends the common, `node`, and `konergy` presets, but intentionally
-does not extend `pnpm`: lockfile maintenance and dedupe are disabled, every
-update requires human merge, and `packages/llm/**` remains an immutable
-boundary. Any ordinary dependency PR that changes the deprecated workspace's
-shared-lockfile resolution must be rejected. AthleteOS extends the common and
+The Konergy preset is deliberately disabled and must not be onboarded yet. Its
+root `pnpm-lock.yaml` is shared with the immutable `packages/llm` workspace, so
+Konergy CI must first compare the current canonical projection of that importer
+and every transitively reachable package/snapshot node with the merge-base from
+`origin/master`. The guard must live outside and never enter `packages/llm/**`;
+the protected base revision, not a PR-authored file, is the baseline. The
+accepted implementation is
+`scripts/ci/verify-llm-lock-boundary.mjs`, exposed as
+`pnpm test:llm-lock-boundary` and required by `.github/workflows/turbo-ci.yml`.
+Once the PR containing that green required check is merged, a reviewed policy
+change may enable the preset; Konergy then extends the common, `node`, and
+`konergy` presets but not `pnpm`, keeping lockfile maintenance and dedupe
+disabled and every update human-merged. AthleteOS extends the common and
 `athleteos` presets; that preset enables only its Python, uv, Gradle, Docker,
 and GitHub Actions managers and intentionally excludes npm.
 
 The Mend Renovate GitHub app must use **Selected repositories** and include
-only `PayAtTable`, `ride-os`, `athleteos`, and `konergy`. The protected personal
-`vpn-subscription-service` repository is not installed or onboarded.
+only `PayAtTable`, `ride-os`, and `athleteos` initially. Add `konergy` only after
+the lockfile-closure CI guard above is merged and the disabled preset is enabled
+in a reviewed change. The protected personal `vpn-subscription-service`
+repository is never installed or onboarded.
+
+## Repository contents
+
+- `default.json` contains the common scheduling, pinning, review, and automerge
+  policy.
+- `node.json`, `pnpm.json`, `konergy.json`, and `athleteos.json` are composable
+  ecosystem/repository presets; `konergy.json` is currently disabled.
+- `scripts/test-presets.mjs` checks static fleet invariants.
+- `scripts/test-renovate-fixture.mjs` runs exact-pinned Node, npm, and Renovate,
+  uses Renovate's own config merge and package-rule pipeline, and separately
+  proves an incompatible peer graph is rejected by npm's strict resolver.
+- `test/fixtures/` contains the checked-in extraction and peer-conflict inputs.
+
+Residual onboarding prerequisites are repository transfer to `wh1teee-org`,
+green consumer CI, and selected-repository GitHub app installation. Konergy also
+requires the lockfile-closure guard above. None of these presets authorizes a
+change to `vpn-subscription-service`.
 
 ## Policy
 
@@ -47,7 +74,8 @@ only `PayAtTable`, `ride-os`, `athleteos`, and `konergy`. The protected personal
 - Only mature dev-only patch updates may automerge, after seven release days and
   required checks pass. They always merge through a PR and never use GitHub's
   platform-native automerge. All other updates remain human-merged; Konergy
-  never automerges.
+  remains entirely disabled until its lockfile-closure invariant is enforced
+  in repository CI.
 - Branch creation is limited to Minsk nights/weekends. Two commits per hour per
   repository prevents rebase storms while host admission controls actual runner
   capacity.

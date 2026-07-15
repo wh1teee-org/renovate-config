@@ -1,0 +1,9 @@
+{
+  "name": "renovate-policy-peer-conflict-fixture",
+  "private": true,
+  "packageManager": "npm@11.6.2",
+  "dependencies": {
+    "fixture-peer": "file:packages/fixture-peer",
+    "react": "19.2.6"
+  }
+}
