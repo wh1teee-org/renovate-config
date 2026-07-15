@@ -101,7 +101,7 @@ Run:
 ```sh
 node scripts/test-presets.mjs
 node scripts/test-jit-runner-smoke.mjs
-npm exec --yes --package=renovate@43.263.5 -- renovate-config-validator --strict --no-global default.json node.json pnpm.json konergy.json athleteos.json
+npm exec --yes --package=renovate@43.263.7 -- renovate-config-validator --strict --no-global default.json node.json pnpm.json konergy.json athleteos.json
 node scripts/test-renovate-fixture.mjs
 actionlint .github/workflows/jit-runner-smoke.yml .github/workflows/validate.yml
 ```

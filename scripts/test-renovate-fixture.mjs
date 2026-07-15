@@ -7,7 +7,7 @@ import { spawnSync } from "node:child_process";
 
 const NODE_VERSION = "24.18.0";
 const NPM_VERSION = "11.6.2";
-const RENOVATE_VERSION = "43.263.5";
+const RENOVATE_VERSION = "43.263.7";
 const childFlag = "RENOVATE_POLICY_PINNED_RUNTIME";
 const scriptPath = fileURLToPath(import.meta.url);
 const root = join(dirname(scriptPath), "..");
@@ -84,14 +84,43 @@ async function verifyWithPinnedRenovate() {
   const node = load("node.json");
   const pnpm = load("pnpm.json");
   const konergy = load("konergy.json");
+  const athleteos = load("athleteos.json");
   const effective = mergeWithRenovate(base, node, pnpm);
   const konergyEffective = mergeWithRenovate(base, node, konergy);
+  const repositoryProfiles = {
+    RideOS: effective,
+    PayAtTable: effective,
+    athleteos: mergeWithRenovate(base, athleteos),
+    Konergy: konergyEffective,
+  };
 
   assert.equal(
     effective.packageRules.length,
     base.packageRules.length + node.packageRules.length,
     "Renovate must merge packageRules from the common and Node presets",
   );
+  for (const [repository, profile] of Object.entries(repositoryProfiles)) {
+    assert.equal(profile.rangeStrategy, "pin", `${repository} direct dependencies must remain exact-pinned`);
+    const majorRule = profile.packageRules.find((rule) => rule.matchUpdateTypes?.includes("major"));
+    assert.equal(majorRule?.dependencyDashboardApproval, true, `${repository} majors must require dashboard approval`);
+    assert.equal(majorRule?.automerge, false, `${repository} majors must never automerge`);
+  }
+  for (const groupName of ["react runtime", "prisma", "vite and vitest"]) {
+    assert.ok(
+      repositoryProfiles.RideOS.packageRules.some((rule) => rule.groupName === groupName),
+      `RideOS must retain the ${groupName} compatibility group`,
+    );
+    assert.ok(
+      repositoryProfiles.PayAtTable.packageRules.some((rule) => rule.groupName === groupName),
+      `PayAtTable must retain the ${groupName} compatibility group`,
+    );
+  }
+  for (const groupName of ["uv toolchain", "fastapi and pydantic", "android build toolchain"]) {
+    assert.ok(
+      repositoryProfiles.athleteos.packageRules.some((rule) => rule.groupName === groupName),
+      `athleteos must retain the ${groupName} compatibility group`,
+    );
+  }
 
   const fixtureDir = join(root, "test", "fixtures", "node");
   const workDir = temporaryDirectory("renovate-policy-fixture-");
@@ -175,6 +204,12 @@ async function verifyWithPinnedRenovate() {
   };
   const cases = {
     ordinary: policyCase({ depName: "prettier", depType: "devDependencies", currentVersion: "3.9.4" }),
+    major: policyCase({
+      depName: "prettier",
+      depType: "devDependencies",
+      currentVersion: "3.9.4",
+      updateType: "major",
+    }),
     security: policyCase({ depName: "better-auth", depType: "devDependencies", currentVersion: "1.6.0" }),
     native: policyCase({ depName: "sharp", depType: "devDependencies", currentVersion: "0.34.4" }),
     eslint: policyCase({ depName: "eslint", depType: "devDependencies", currentVersion: "9.39.3" }),
@@ -194,6 +229,10 @@ async function verifyWithPinnedRenovate() {
   assert.equal(ordinary.automerge, true, "ordinary mature dev patches should be the only automerge lane");
   assert.equal(ordinary.automergeType, "pr");
   assert.equal(ordinary.platformAutomerge, false);
+
+  const major = await evaluate(cases.major);
+  assert.equal(major.dependencyDashboardApproval, true, "major updates must require dashboard approval");
+  assert.equal(major.automerge, false, "major updates must never automerge");
 
   for (const name of ["security", "native", "eslint", "ts6", "ts7", "turbo", "vite", "vitest", "pnpmAction", "nodeRuntime"]) {
     assert.equal((await evaluate(cases[name])).automerge, false, `${name} updates must never automerge`);
@@ -218,7 +257,7 @@ async function verifyWithPinnedRenovate() {
   verifyPackageManagerPeerConflict(binary("npm"));
   removeTemporaryDirectory(workDir);
   console.log(
-    "Pinned Renovate verified: real config merge, extraction, and package-rule application; npm independently rejected the peer-conflict fixture.",
+    "Pinned Renovate verified: four repository profiles, real config merge/extraction/grouping, gated majors; npm independently rejected the peer-conflict fixture.",
   );
 }
 
