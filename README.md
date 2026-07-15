@@ -47,7 +47,11 @@ repository is never installed or onboarded.
   policy.
 - `node.json`, `pnpm.json`, `konergy.json`, and `athleteos.json` are composable
   ecosystem/repository presets; `konergy.json` is currently disabled.
-- `scripts/test-presets.mjs` checks static fleet invariants.
+- `.github/workflows/validate.yml` validates the presets; the permanent,
+  no-action `.github/workflows/jit-runner-smoke.yml` validates JIT admission.
+- `.github/actionlint.yaml` declares the three custom self-hosted runner labels.
+- `scripts/test-presets.mjs` checks static fleet invariants, while
+  `scripts/test-jit-runner-smoke.mjs` locks down the JIT workflow contract.
 - `scripts/test-renovate-fixture.mjs` runs exact-pinned Node, npm, and Renovate,
   uses Renovate's own config merge and package-rule pipeline, and separately
   proves an incompatible peer graph is rejected by npm's strict resolver.
@@ -57,6 +61,13 @@ Residual onboarding prerequisites are repository transfer to `wh1teee-org`,
 green consumer CI, and selected-repository GitHub app installation. Konergy also
 requires the lockfile-closure guard above. None of these presets authorizes a
 change to `vpn-subscription-service`.
+
+The JIT smoke workflow targets only the exact `work-pc` general labels for this
+repository. It checks GitHub-provided runner identity, requires both workspace
+and temp paths beneath the isolated per-job root, probes shared caches read-only,
+and writes a harmless marker beneath `RUNNER_TEMP`. Host-side admission proof
+must show the runner auto-deregistered and both the marker and job root were
+deleted after the single job. The workflow uses no secrets, checkout, or action.
 
 ## Policy
 
@@ -86,8 +97,10 @@ Run:
 
 ```sh
 node scripts/test-presets.mjs
+node scripts/test-jit-runner-smoke.mjs
 npm exec --yes --package=renovate@43.263.5 -- renovate-config-validator --strict --no-global default.json node.json pnpm.json konergy.json athleteos.json
 node scripts/test-renovate-fixture.mjs
+actionlint .github/workflows/jit-runner-smoke.yml .github/workflows/validate.yml
 ```
 
 Rollback is additive and reversible: remove the consumer `renovate.json`, or

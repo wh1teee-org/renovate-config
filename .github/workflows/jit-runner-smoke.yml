@@ -1,0 +1,91 @@
+name: JIT runner smoke
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/jit-runner-smoke.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Verify isolated JIT runner
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, Linux, X64, work-pc, general, renovate-config]
+    timeout-minutes: 5
+    steps:
+      - name: Verify identity, isolation, and shared caches
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          : "${RUNNER_NAME:?RUNNER_NAME is required}"
+          : "${RUNNER_OS:?RUNNER_OS is required}"
+          : "${RUNNER_ARCH:?RUNNER_ARCH is required}"
+          : "${RUNNER_TEMP:?RUNNER_TEMP is required}"
+          : "${GITHUB_WORKSPACE:?GITHUB_WORKSPACE is required}"
+          : "${GITHUB_RUN_ID:?GITHUB_RUN_ID is required}"
+          : "${GITHUB_RUN_ATTEMPT:?GITHUB_RUN_ATTEMPT is required}"
+
+          if [[ ! "$RUNNER_NAME" =~ ^work-pc-renovate-config-general-01-[0-9a-f]{8}$ ]]; then
+            printf 'unexpected JIT runner name: %s\n' "$RUNNER_NAME" >&2
+            exit 1
+          fi
+          [[ "$RUNNER_OS" == "Linux" ]]
+          [[ "$RUNNER_ARCH" == "X64" ]]
+          [[ "$GITHUB_RUN_ID" =~ ^[0-9]+$ ]]
+          [[ "$GITHUB_RUN_ATTEMPT" =~ ^[0-9]+$ ]]
+
+          job_prefix="/var/lib/ci-runner-jit/jobs/"
+          runner_temp="$(realpath -e -- "$RUNNER_TEMP")"
+          workspace="$(realpath -e -- "$GITHUB_WORKSPACE")"
+          case "$runner_temp" in
+            "$job_prefix"*) ;;
+            *) printf 'RUNNER_TEMP is outside the JIT jobs root: %s\n' "$runner_temp" >&2; exit 1 ;;
+          esac
+
+          relative_temp="${runner_temp#"$job_prefix"}"
+          slot="${relative_temp%%/*}"
+          after_slot="${relative_temp#*/}"
+          nonce="${after_slot%%/*}"
+          if [[ -z "$slot" || -z "$nonce" || "$relative_temp" == "$slot" || "$after_slot" == "$nonce" ]]; then
+            printf 'RUNNER_TEMP does not identify an isolated slot and nonce: %s\n' "$runner_temp" >&2
+            exit 1
+          fi
+          job_root="${job_prefix}${slot}/${nonce}"
+
+          case "$runner_temp" in "$job_root"/*) ;; *) exit 1 ;; esac
+          case "$workspace" in "$job_root"/*) ;; *) printf 'workspace is outside job root: %s\n' "$workspace" >&2; exit 1 ;; esac
+          [[ "$runner_temp" != "$workspace" ]]
+          case "$job_root:$runner_temp:$workspace" in
+            *:/home|*:/home/*|*:/home:*) printf 'JIT paths must never resolve beneath /home\n' >&2; exit 1 ;;
+          esac
+
+          cache_paths=(
+            /var/cache/ci/pnpm/store
+            /var/cache/ci/pnpm/corepack
+            /var/cache/ci/actions-tool-cache
+            /var/cache/ci/turbo
+            /var/cache/ci/gradle
+            /var/cache/ci/pub
+            /var/cache/ci/uv
+          )
+          for cache_path in "${cache_paths[@]}"; do
+            resolved_cache="$(realpath -e -- "$cache_path")"
+            [[ -d "$resolved_cache" && -r "$resolved_cache" && -x "$resolved_cache" ]]
+            case "$resolved_cache" in "$job_root"|"$job_root"/*) exit 1 ;; esac
+            stat --format='cache-readable path=%n mode=%A uid=%u gid=%g' -- "$resolved_cache"
+          done
+
+          marker="$runner_temp/jit-smoke-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT.marker"
+          printf 'jit-runner-smoke\n' > "$marker"
+          marker="$(realpath -e -- "$marker")"
+          marker_sha256="$(sha256sum -- "$marker" | cut -d ' ' -f 1)"
+          marker_size="$(stat --format='%s' -- "$marker")"
+
+          printf 'runner=%s os=%s arch=%s run=%s attempt=%s\n' \
+            "$RUNNER_NAME" "$RUNNER_OS" "$RUNNER_ARCH" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT"
+          printf 'job-root=%s workspace=%s temp=%s\n' "$job_root" "$workspace" "$runner_temp"
+          printf 'cleanup-marker path=%s sha256=%s size=%s\n' "$marker" "$marker_sha256" "$marker_size"

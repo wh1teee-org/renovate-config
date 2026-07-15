@@ -25,6 +25,9 @@ jobs:
       - name: Verify fleet policy invariants
         run: node scripts/test-presets.mjs
 
+      - name: Verify JIT runner smoke policy
+        run: node scripts/test-jit-runner-smoke.mjs
+
       - name: Verify effective fixture policy
         run: node scripts/test-renovate-fixture.mjs
         env:
