@@ -25,7 +25,7 @@ const removeTemporaryDirectory = (directory) => {
 process.on("exit", () => temporaryDirectories.forEach((directory) => rmSync(directory, { recursive: true, force: true })));
 
 if (process.env[childFlag] !== "1") {
-  const run = spawnSync(
+  const pinnedRuntimeProcess = spawnSync(
     "npm",
     [
       "exec",
@@ -46,10 +46,14 @@ if (process.env[childFlag] !== "1") {
     },
   );
 
-  process.stdout.write(run.stdout ?? "");
-  process.stderr.write(run.stderr ?? "");
-  assert.equal(run.error, undefined, `Pinned fixture runtime failed to start: ${run.error?.message}`);
-  assert.equal(run.status, 0, "Pinned Renovate fixture verification failed");
+  process.stdout.write(pinnedRuntimeProcess.stdout ?? "");
+  process.stderr.write(pinnedRuntimeProcess.stderr ?? "");
+  assert.equal(
+    pinnedRuntimeProcess.error,
+    undefined,
+    `Pinned fixture runtime failed to start: ${pinnedRuntimeProcess.error?.message}`,
+  );
+  assert.equal(pinnedRuntimeProcess.status, 0, "Pinned Renovate fixture verification failed");
 } else {
   await verifyWithPinnedRenovate();
 }
@@ -136,16 +140,16 @@ async function verifyWithPinnedRenovate() {
     }
   });
   const dependencies = [];
-  const visit = (value) => {
+  const collectDependencies = (value) => {
     if (!value || typeof value !== "object") return;
     if (Array.isArray(value)) {
-      value.forEach(visit);
+      value.forEach(collectDependencies);
       return;
     }
     if (value.depName && value.depType) dependencies.push(value);
-    Object.values(value).forEach(visit);
+    Object.values(value).forEach(collectDependencies);
   };
-  records.forEach(visit);
+  records.forEach(collectDependencies);
 
   const findDependency = (depName, depType) =>
     dependencies.find((dependency) => dependency.depName === depName && dependency.depType === depType);
@@ -159,7 +163,7 @@ async function verifyWithPinnedRenovate() {
   assert.equal(peerReact?.currentValue, "^18.0.0", "Renovate must expose the peer range to its update policy");
   assert.equal(catalogZod?.currentValue, "4.4.2", "Renovate must extract repo-local pnpm catalogs");
 
-  const policyCase = (depName, depType, currentVersion, updateType = "patch") => {
+  const policyCase = ({ depName, depType, currentVersion, updateType = "patch" }) => {
     const extracted = findDependency(depName, depType);
     assert.ok(extracted, `${depName} (${depType}) must come from the real Renovate fixture lookup`);
     return {
@@ -170,19 +174,19 @@ async function verifyWithPinnedRenovate() {
     };
   };
   const cases = {
-    ordinary: policyCase("prettier", "devDependencies", "3.9.4"),
-    security: policyCase("better-auth", "devDependencies", "1.6.0"),
-    native: policyCase("sharp", "devDependencies", "0.34.4"),
-    eslint: policyCase("eslint", "devDependencies", "9.39.3"),
-    ts6: policyCase("typescript", "devDependencies", "6.0.1"),
-    ts7: policyCase("@typescript/native", "devDependencies", "7.0.2"),
-    turbo: policyCase("turbo", "devDependencies", "2.10.4"),
-    vite: policyCase("vite", "devDependencies", "8.1.3"),
-    vitest: policyCase("vitest", "devDependencies", "4.1.9"),
-    peer: policyCase("react", "peerDependencies", "18.0.0", "major"),
-    prisma: policyCase("@prisma/client", "dependencies", "7.7.0"),
-    pnpmAction: policyCase("pnpm/action-setup", "action", "4.0.0"),
-    nodeRuntime: policyCase("node", "engines", "24.18.0"),
+    ordinary: policyCase({ depName: "prettier", depType: "devDependencies", currentVersion: "3.9.4" }),
+    security: policyCase({ depName: "better-auth", depType: "devDependencies", currentVersion: "1.6.0" }),
+    native: policyCase({ depName: "sharp", depType: "devDependencies", currentVersion: "0.34.4" }),
+    eslint: policyCase({ depName: "eslint", depType: "devDependencies", currentVersion: "9.39.3" }),
+    ts6: policyCase({ depName: "typescript", depType: "devDependencies", currentVersion: "6.0.1" }),
+    ts7: policyCase({ depName: "@typescript/native", depType: "devDependencies", currentVersion: "7.0.2" }),
+    turbo: policyCase({ depName: "turbo", depType: "devDependencies", currentVersion: "2.10.4" }),
+    vite: policyCase({ depName: "vite", depType: "devDependencies", currentVersion: "8.1.3" }),
+    vitest: policyCase({ depName: "vitest", depType: "devDependencies", currentVersion: "4.1.9" }),
+    peer: policyCase({ depName: "react", depType: "peerDependencies", currentVersion: "18.0.0", updateType: "major" }),
+    prisma: policyCase({ depName: "@prisma/client", depType: "dependencies", currentVersion: "7.7.0" }),
+    pnpmAction: policyCase({ depName: "pnpm/action-setup", depType: "action", currentVersion: "4.0.0" }),
+    nodeRuntime: policyCase({ depName: "node", depType: "engines", currentVersion: "24.18.0" }),
   };
   const evaluate = (dependency) => applyPackageRules({ ...effective, ...dependency }, "package-rules");
 
