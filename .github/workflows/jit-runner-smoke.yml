@@ -12,7 +12,10 @@ permissions:
 jobs:
   smoke:
     name: Verify isolated JIT runner
-    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
+    if: >-
+      github.actor == 'wh1teee' &&
+      (github.event_name == 'workflow_dispatch' ||
+      github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: [self-hosted, Linux, X64, work-pc, general, renovate-config]
     timeout-minutes: 5
     steps:
@@ -59,9 +62,11 @@ jobs:
           case "$runner_temp" in "$job_root"/*) ;; *) exit 1 ;; esac
           case "$workspace" in "$job_root"/*) ;; *) printf 'workspace is outside job root: %s\n' "$workspace" >&2; exit 1 ;; esac
           [[ "$runner_temp" != "$workspace" ]]
-          case "$job_root:$runner_temp:$workspace" in
-            *:/home|*:/home/*|*:/home:*) printf 'JIT paths must never resolve beneath /home\n' >&2; exit 1 ;;
-          esac
+          for isolated_path in "$job_root" "$runner_temp" "$workspace"; do
+            case "$isolated_path" in
+              /home|/home/*) printf 'JIT paths must never resolve beneath /home: %s\n' "$isolated_path" >&2; exit 1 ;;
+            esac
+          done
 
           cache_paths=(
             /var/cache/ci/pnpm/store

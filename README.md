@@ -63,11 +63,14 @@ requires the lockfile-closure guard above. None of these presets authorizes a
 change to `vpn-subscription-service`.
 
 The JIT smoke workflow targets only the exact `work-pc` general labels for this
-repository. It checks GitHub-provided runner identity, requires both workspace
-and temp paths beneath the isolated per-job root, probes shared caches read-only,
-and writes a harmless marker beneath `RUNNER_TEMP`. Host-side admission proof
-must show the runner auto-deregistered and both the marker and job root were
-deleted after the single job. The workflow uses no secrets, checkout, or action.
+repository and rejects forks and non-owner actors before runner assignment. It
+checks GitHub-provided runner identity, requires both workspace and temp paths
+beneath the isolated per-job root, probes shared caches read-only, and writes a
+harmless marker beneath `RUNNER_TEMP`. Because `pull_request` evaluates the
+PR-head workflow, host admission must independently allowlist the exact reviewed
+run and head SHA before creating its one-job JIT runner. Post-job proof must show
+the runner auto-deregistered and both the marker and job root were deleted. The
+workflow uses no secrets, checkout, or action.
 
 ## Policy
 

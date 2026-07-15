@@ -21,15 +21,26 @@ const cachePaths = [
 assert.match(workflow, /^name: JIT runner smoke$/m);
 assert.match(workflow, /^  pull_request:\n    paths:\n      - \.github\/workflows\/jit-runner-smoke\.yml$/m);
 assert.match(workflow, /^  workflow_dispatch:$/m);
-assert.match(workflow, /^permissions:\n  contents: read$/m);
+const workflowLines = workflow.split("\n");
+const permissionsLine = workflowLines.indexOf("permissions:");
+assert.notEqual(permissionsLine, -1, "workflow must declare explicit permissions");
+const permissionEntries = [];
+for (const line of workflowLines.slice(permissionsLine + 1)) {
+  if (line === "" || !line.startsWith("  ")) break;
+  permissionEntries.push(line);
+}
+assert.deepEqual(permissionEntries, ["  contents: read"], "contents:read must be the only token permission");
 assert.ok(workflow.includes(`runs-on: ${labels}`), "smoke job must target the exact JIT labels");
 assert.ok(
   workflow.includes("github.event.pull_request.head.repo.full_name == github.repository"),
   "fork pull requests must never receive a self-hosted runner",
 );
+assert.ok(workflow.includes("github.actor == 'wh1teee'"), "only the trusted owner may request JIT admission");
 assert.doesNotMatch(workflow, /^\s*uses:/m, "smoke workflow must not download actions");
 assert.doesNotMatch(workflow, /secrets\./, "smoke workflow must not read repository or organization secrets");
 assert.ok(workflow.includes("/var/lib/ci-runner-jit/jobs/"), "workflow must enforce the isolated per-job root");
+assert.ok(workflow.includes("^work-pc-renovate-config-general-01-[0-9a-f]{8}$"));
+assert.ok(workflow.includes('for isolated_path in "$job_root" "$runner_temp" "$workspace"'));
 assert.ok(workflow.includes('jit-smoke-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT.marker'));
 for (const cachePath of cachePaths) {
   assert.ok(workflow.includes(cachePath), `${cachePath} must be probed read-only`);
