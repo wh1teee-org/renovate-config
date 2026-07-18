@@ -1,0 +1,5 @@
+packages: []
+
+catalogs:
+  schema:
+    zod: 4.4.2
