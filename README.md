@@ -85,7 +85,7 @@ workflow uses no secrets, checkout, or action.
   approval lanes.
 - Compatibility families are grouped; majors, native ABI packages, database,
   auth, and security-sensitive changes remain reviewed.
-- Only mature dev-only patch updates may automerge, after seven release days and
+- Only mature dev-only patch updates may automerge, after fourteen release days and
   required checks pass. They always merge through a PR and never use GitHub's
   platform-native automerge. All other updates remain human-merged; Konergy
   remains entirely disabled until its lockfile-closure invariant is enforced
@@ -101,7 +101,7 @@ Run:
 ```sh
 node scripts/test-presets.mjs
 node scripts/test-jit-runner-smoke.mjs
-npm exec --yes --package=renovate@43.263.7 -- renovate-config-validator --strict --no-global default.json node.json pnpm.json konergy.json athleteos.json
+npm exec --yes --package=renovate@43.269.1 -- renovate-config-validator --strict --no-global default.json node.json pnpm.json konergy.json athleteos.json
 node scripts/test-renovate-fixture.mjs
 actionlint .github/workflows/jit-runner-smoke.yml .github/workflows/validate.yml
 ```

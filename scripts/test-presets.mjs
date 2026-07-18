@@ -24,7 +24,7 @@ assert.equal(onlyAutomergeRule.length, 1, "automerge must stay restricted to one
 assert.deepEqual(onlyAutomergeRule[0].matchDepTypes, ["devDependencies", "dev-dependencies", "dev"]);
 assert.equal(onlyAutomergeRule[0].matchCurrentVersion, "!/^0/");
 assert.deepEqual(onlyAutomergeRule[0].matchUpdateTypes, ["patch"]);
-assert.equal(onlyAutomergeRule[0].minimumReleaseAge, "7 days");
+assert.equal(onlyAutomergeRule[0].minimumReleaseAge, "14 days");
 assert.equal(onlyAutomergeRule[0].automergeType, "pr");
 assert.equal(onlyAutomergeRule[0].platformAutomerge, false);
 

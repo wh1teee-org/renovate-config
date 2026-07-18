@@ -7,7 +7,7 @@ import { spawnSync } from "node:child_process";
 
 const NODE_VERSION = "24.18.0";
 const NPM_VERSION = "11.6.2";
-const RENOVATE_VERSION = "43.263.7";
+const RENOVATE_VERSION = "43.269.1";
 const childFlag = "RENOVATE_POLICY_PINNED_RUNTIME";
 const scriptPath = fileURLToPath(import.meta.url);
 const root = join(dirname(scriptPath), "..");
