@@ -19,34 +19,32 @@ Node/pnpm repositories extend the common and Node presets:
 }
 ```
 
-The Konergy preset is deliberately disabled and must not be onboarded yet. Its
-root `pnpm-lock.yaml` is shared with the immutable `packages/llm` workspace, so
-Konergy CI must first compare the current canonical projection of that importer
-and every transitively reachable package/snapshot node with the merge-base from
-`origin/master`. The guard must live outside and never enter `packages/llm/**`;
-the protected base revision, not a PR-authored file, is the baseline. The
-accepted implementation is
-`scripts/ci/verify-llm-lock-boundary.mjs`, exposed as
-`pnpm test:llm-lock-boundary` and required by `.github/workflows/turbo-ci.yml`.
-Once the PR containing that green required check is merged, a reviewed policy
-change may enable the preset; Konergy then extends the common, `node`, and
-`konergy` presets but not `pnpm`, keeping lockfile maintenance and dedupe
-disabled and every update human-merged. AthleteOS extends the common and
-`athleteos` presets; that preset enables only its Python, uv, Gradle, Docker,
-and GitHub Actions managers and intentionally excludes npm.
+Konergy's root `pnpm-lock.yaml` is shared with the immutable `packages/llm`
+workspace. Its repository CI therefore compares the canonical projection of
+that importer and every transitively reachable package/snapshot node with the
+merge-base from `origin/master`. The guard lives outside and never enters
+`packages/llm/**`; the protected base revision, not a PR-authored file, is the
+baseline. The accepted implementation,
+`scripts/ci/verify-llm-lock-boundary.mjs`, is exposed as
+`pnpm test:llm-lock-boundary` and runs in `.github/workflows/turbo-ci.yml`.
+That guard merged with green exact-head checks in Konergy PR #231, so the shared
+Konergy preset is enabled. Konergy extends the common, `node`, and `konergy`
+presets but not `pnpm`, keeping lockfile maintenance and dedupe disabled and
+every update human-merged. AthleteOS extends the common and `athleteos` presets;
+that preset enables only its Python, uv, Gradle, Docker, and GitHub Actions
+managers and intentionally excludes npm.
 
-The Mend Renovate GitHub app must use **Selected repositories** and include
-only `PayAtTable`, `ride-os`, and `athleteos` initially. Add `konergy` only after
-the lockfile-closure CI guard above is merged and the disabled preset is enabled
-in a reviewed change. The protected personal `vpn-subscription-service`
-repository is never installed or onboarded.
+The Mend Renovate GitHub app must use **Selected repositories** and include only
+`PayAtTable`, `ride-os`, `athleteos`, and `konergy`. The protected personal
+`vpn-subscription-service` repository is never installed or onboarded.
 
 ## Repository contents
 
 - `default.json` contains the common scheduling, pinning, review, and automerge
   policy.
 - `node.json`, `pnpm.json`, `konergy.json`, and `athleteos.json` are composable
-  ecosystem/repository presets; `konergy.json` is currently disabled.
+  ecosystem/repository presets. Konergy remains protected by its LLM exclusion,
+  disabled lockfile maintenance, and human-only merge policy.
 - `.github/workflows/validate.yml` validates the presets; the permanent,
   no-action `.github/workflows/jit-runner-smoke.yml` validates JIT admission.
 - `.github/actionlint.yaml` declares the three custom self-hosted runner labels.
@@ -57,10 +55,9 @@ repository is never installed or onboarded.
   proves an incompatible peer graph is rejected by npm's strict resolver.
 - `test/fixtures/` contains the checked-in extraction and peer-conflict inputs.
 
-Residual onboarding prerequisites are repository transfer to `wh1teee-org`,
-green consumer CI, and selected-repository GitHub app installation. Konergy also
-requires the lockfile-closure guard above. None of these presets authorizes a
-change to `vpn-subscription-service`.
+Residual onboarding prerequisites are green consumer CI and selected-repository
+GitHub app installation. None of these presets authorizes a change to
+`vpn-subscription-service`.
 
 The JIT smoke workflow targets only the exact `work-pc` general labels for this
 repository and rejects forks and non-owner actors before runner assignment. It
@@ -85,11 +82,11 @@ workflow uses no secrets, checkout, or action.
   approval lanes.
 - Compatibility families are grouped; majors, native ABI packages, database,
   auth, and security-sensitive changes remain reviewed.
-- Only mature dev-only patch updates may automerge, after fourteen release days and
-  required checks pass. They always merge through a PR and never use GitHub's
-  platform-native automerge. All other updates remain human-merged; Konergy
-  remains entirely disabled until its lockfile-closure invariant is enforced
-  in repository CI.
+- Only mature dev-only patch updates may automerge, after fourteen release days
+  and required checks pass. They always merge through a PR and never use
+  GitHub's platform-native automerge. All other updates remain human-merged;
+  every Konergy update remains human-merged and must pass its lockfile-closure
+  invariant.
 - Branch creation is limited to Minsk nights/weekends. Two commits per hour per
   repository prevents rebase storms while host admission controls actual runner
   capacity.
