@@ -249,7 +249,7 @@ async function verifyWithPinnedRenovate() {
   assert.equal(peerPolicy.rangeStrategy, "widen", "Renovate must widen peer declarations instead of pinning them");
   assert.equal(peerPolicy.automerge, false, "Renovate peer updates must require review");
 
-  assert.equal(konergyEffective.enabled, false, "Konergy must remain disabled until its immutable-lockfile CI guard lands");
+  assert.equal(konergyEffective.enabled, true, "Konergy must remain enabled after its immutable-lockfile CI guard landed");
   assert.equal(konergyEffective.lockFileMaintenance.enabled, false);
   assert.ok(!(konergyEffective.postUpdateOptions ?? []).includes("pnpmDedupe"));
   assert.equal((await applyPackageRules({ ...konergyEffective, ...cases.ordinary })).automerge, false);

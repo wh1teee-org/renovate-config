@@ -51,7 +51,7 @@ const pnpmActionRule = nodeRules.find((rule) => rule.groupName === "pnpm setup a
 assert.deepEqual(pnpmActionRule?.matchPackageNames, ["pnpm/action-setup"]);
 
 assert.ok(pnpm.postUpdateOptions.includes("pnpmDedupe"), "pnpm lockfiles must be deduplicated after updates");
-assert.equal(konergy.enabled, false, "Konergy must not be onboardable before its immutable-lockfile CI guard lands");
+assert.equal(konergy.enabled, true, "Konergy must remain onboardable after its immutable-lockfile CI guard landed");
 assert.deepEqual(konergy.ignorePaths, ["packages/llm/**"], "deprecated Konergy LLM code must remain untouched");
 assert.equal(konergy.lockFileMaintenance.enabled, false, "Konergy shared-lockfile maintenance must remain disabled");
 assert.equal(konergy.packageRules.at(-1)?.automerge, false, "Konergy updates must always be human-merged");
