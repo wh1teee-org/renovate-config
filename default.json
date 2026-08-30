@@ -84,6 +84,17 @@
       "groupName": null,
       "automerge": false,
       "prPriority": 20
+    },
+    {
+      "description": "Keep Product Foundry packages on the Foundry release/adoption plane",
+      "matchManagers": [
+        "npm"
+      ],
+      "matchPackageNames": [
+        "/^@product-foundry\\//"
+      ],
+      "enabled": false,
+      "automerge": false
     }
   ]
 }

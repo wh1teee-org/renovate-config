@@ -28,6 +28,12 @@ assert.equal(onlyAutomergeRule[0].minimumReleaseAge, "14 days");
 assert.equal(onlyAutomergeRule[0].automergeType, "pr");
 assert.equal(onlyAutomergeRule[0].platformAutomerge, false);
 
+const foundryAuthorityRule = base.packageRules.find((rule) => rule.description === "Keep Product Foundry packages on the Foundry release/adoption plane");
+assert.deepEqual(foundryAuthorityRule?.matchManagers, ["npm"]);
+assert.deepEqual(foundryAuthorityRule?.matchPackageNames, ["/^@product-foundry\\//"]);
+assert.equal(foundryAuthorityRule?.enabled, false, "ordinary Renovate updates must never repin Product Foundry packages");
+assert.equal(foundryAuthorityRule?.automerge, false);
+
 const nodeRules = node.packageRules;
 const peerRule = nodeRules.find((rule) => rule.matchDepTypes?.includes("peerDependencies"));
 assert.equal(peerRule?.rangeStrategy, "widen", "peer ranges must never be exact-pinned");
