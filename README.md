@@ -34,9 +34,11 @@ every update human-merged. AthleteOS extends the common and `athleteos` presets;
 that preset enables only its Python, uv, Gradle, Docker, and GitHub Actions
 managers and intentionally excludes npm.
 
-The Mend Renovate GitHub app must use **Selected repositories** and include only
-`PayAtTable`, `ride-os`, `athleteos`, and `konergy`. The protected personal
-`vpn-subscription-service` repository is never installed or onboarded.
+The Mend Renovate GitHub app must use **Selected repositories**. The
+`wh1teee-org` installation includes only `PayAtTable`, `ride-os`, `athleteos`,
+and `konergy`; the personal `wh1teee` installation includes only
+`product-foundry` and `vpn-subscription-service`. Both personal repositories use
+the same reviewed common/Node/pnpm policy instead of a second dependency bot.
 
 ## Repository contents
 
@@ -78,6 +80,9 @@ workflow uses no secrets, checkout, or action.
   only in reviewed toolchain PRs; the setup action remains independently managed.
 - pnpm catalogs stay repo-local; Renovate updates them through the npm manager
   and runs `pnpmDedupe` after lockfile changes.
+- `@product-foundry/*` packages are excluded from ordinary Renovate updates;
+  Product Foundry release classification, affected-consumer delivery, and exact
+  consumer proof remain the only authority for those pins.
 - TypeScript's TS6 compiler-API alias and TS7 native typecheck alias are separate
   approval lanes.
 - Compatibility families are grouped; majors, native ABI packages, database,

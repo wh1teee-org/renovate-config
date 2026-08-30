@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
-import { cpSync, existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 
-const NODE_VERSION = "24.18.0";
+const NODE_VERSION = "24.18.1";
 const NPM_VERSION = "11.6.2";
 const RENOVATE_VERSION = "43.269.1";
 const childFlag = "RENOVATE_POLICY_PINNED_RUNTIME";
@@ -26,14 +27,12 @@ process.on("exit", () => temporaryDirectories.forEach((directory) => rmSync(dire
 
 if (process.env[childFlag] !== "1") {
   const pinnedRuntimeProcess = spawnSync(
-    "npm",
+    "pnpm",
     [
-      "exec",
-      "--yes",
       `--package=node@${NODE_VERSION}`,
       `--package=npm@${NPM_VERSION}`,
       `--package=renovate@${RENOVATE_VERSION}`,
-      "--",
+      "dlx",
       "node",
       scriptPath,
     ],
@@ -67,9 +66,12 @@ async function verifyWithPinnedRenovate() {
   const renovateBinary = binary("renovate");
   assert.ok(renovateBinary, "Pinned Renovate binary must be available on PATH");
 
-  const renovateEntry = realpathSync(renovateBinary);
-  const renovateRoot = dirname(dirname(renovateEntry));
-  const renovatePackage = JSON.parse(readFileSync(join(renovateRoot, "package.json"), "utf8"));
+  const moduleRequire = createRequire(import.meta.url);
+  const renovatePackagePath = moduleRequire.resolve("renovate/package.json", {
+    paths: [dirname(dirname(renovateBinary))],
+  });
+  const renovateRoot = dirname(renovatePackagePath);
+  const renovatePackage = JSON.parse(readFileSync(renovatePackagePath, "utf8"));
   assert.equal(renovatePackage.version, RENOVATE_VERSION, "Fixture must use the exact pinned Renovate version");
 
   const [{ mergeChildConfig }, { applyPackageRules }] = await Promise.all([
@@ -88,6 +90,8 @@ async function verifyWithPinnedRenovate() {
   const effective = mergeWithRenovate(base, node, pnpm);
   const konergyEffective = mergeWithRenovate(base, node, konergy);
   const repositoryProfiles = {
+    ProductFoundry: effective,
+    Northlink: effective,
     RideOS: effective,
     PayAtTable: effective,
     athleteos: mergeWithRenovate(base, athleteos),
@@ -105,15 +109,13 @@ async function verifyWithPinnedRenovate() {
     assert.equal(majorRule?.dependencyDashboardApproval, true, `${repository} majors must require dashboard approval`);
     assert.equal(majorRule?.automerge, false, `${repository} majors must never automerge`);
   }
-  for (const groupName of ["react runtime", "prisma", "vite and vitest"]) {
-    assert.ok(
-      repositoryProfiles.RideOS.packageRules.some((rule) => rule.groupName === groupName),
-      `RideOS must retain the ${groupName} compatibility group`,
-    );
-    assert.ok(
-      repositoryProfiles.PayAtTable.packageRules.some((rule) => rule.groupName === groupName),
-      `PayAtTable must retain the ${groupName} compatibility group`,
-    );
+  for (const repository of ["ProductFoundry", "Northlink", "RideOS", "PayAtTable"]) {
+    for (const groupName of ["react runtime", "prisma", "vite and vitest"]) {
+      assert.ok(
+        repositoryProfiles[repository].packageRules.some((rule) => rule.groupName === groupName),
+        `${repository} must retain the ${groupName} compatibility group`,
+      );
+    }
   }
   for (const groupName of ["uv toolchain", "fastapi and pydantic", "android build toolchain"]) {
     assert.ok(
@@ -130,7 +132,7 @@ async function verifyWithPinnedRenovate() {
     JSON.stringify(
       mergeChildConfig(effective, {
         dependencyDashboard: false,
-        enabledManagers: ["npm", "github-actions"],
+        enabledManagers: ["npm", "github-actions", "dockerfile", "docker-compose"],
         lockFileMaintenance: { enabled: false },
         schedule: ["at any time"],
         skipInstalls: true,
@@ -175,7 +177,7 @@ async function verifyWithPinnedRenovate() {
       value.forEach(collectDependencies);
       return;
     }
-    if (value.depName && value.depType) dependencies.push(value);
+    if (value.depName && (value.depType || value.datasource)) dependencies.push(value);
     Object.values(value).forEach(collectDependencies);
   };
   records.forEach(collectDependencies);
@@ -186,11 +188,19 @@ async function verifyWithPinnedRenovate() {
   const ts7 = findDependency("@typescript/native", "devDependencies");
   const peerReact = findDependency("react", "peerDependencies");
   const catalogZod = findDependency("zod", "pnpm.catalog.schema");
+  const dockerfileImage = dependencies.find((dependency) => (
+    dependency.depName === "alpine" && dependency.datasource === "docker" && dependency.depType === "final"
+  ));
+  const composeImage = dependencies.find((dependency) => (
+    dependency.depName === "postgres" && dependency.datasource === "docker" && dependency.currentValue === "18.4-alpine"
+  ));
 
   assert.equal(ts6?.packageName, "@typescript/typescript6", "Renovate must extract the TS6 API alias");
   assert.equal(ts7?.packageName, "typescript", "Renovate must extract the TS7 native alias");
   assert.equal(peerReact?.currentValue, "^18.0.0", "Renovate must expose the peer range to its update policy");
   assert.equal(catalogZod?.currentValue, "4.4.2", "Renovate must extract repo-local pnpm catalogs");
+  assert.ok(dockerfileImage, "Renovate must extract Dockerfile image references");
+  assert.ok(composeImage, "Renovate must extract Docker Compose image references");
 
   const policyCase = ({ depName, depType, currentVersion, updateType = "patch" }) => {
     const extracted = findDependency(depName, depType);
@@ -221,7 +231,7 @@ async function verifyWithPinnedRenovate() {
     peer: policyCase({ depName: "react", depType: "peerDependencies", currentVersion: "18.0.0", updateType: "major" }),
     prisma: policyCase({ depName: "@prisma/client", depType: "dependencies", currentVersion: "7.7.0" }),
     pnpmAction: policyCase({ depName: "pnpm/action-setup", depType: "action", currentVersion: "4.0.0" }),
-    nodeRuntime: policyCase({ depName: "node", depType: "engines", currentVersion: "24.18.0" }),
+    nodeRuntime: policyCase({ depName: "node", depType: "engines", currentVersion: "24.18.1" }),
   };
   const evaluate = (dependency) => applyPackageRules({ ...effective, ...dependency }, "package-rules");
 
@@ -257,7 +267,7 @@ async function verifyWithPinnedRenovate() {
   verifyPackageManagerPeerConflict(binary("npm"));
   removeTemporaryDirectory(workDir);
   console.log(
-    "Pinned Renovate verified: four repository profiles, real config merge/extraction/grouping, gated majors; npm independently rejected the peer-conflict fixture.",
+    "Pinned Renovate verified: six repository profiles, real config merge/extraction/grouping, gated majors; npm independently rejected the peer-conflict fixture.",
   );
 }
 
