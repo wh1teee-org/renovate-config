@@ -27,12 +27,14 @@ process.on("exit", () => temporaryDirectories.forEach((directory) => rmSync(dire
 
 if (process.env[childFlag] !== "1") {
   const pinnedRuntimeProcess = spawnSync(
-    "pnpm",
+    "npm",
     [
+      "exec",
+      "--yes",
       `--package=node@${NODE_VERSION}`,
       `--package=npm@${NPM_VERSION}`,
       `--package=renovate@${RENOVATE_VERSION}`,
-      "dlx",
+      "--",
       "node",
       scriptPath,
     ],
