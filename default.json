@@ -17,6 +17,21 @@
   "labels": [
     "dependencies"
   ],
+  "ignorePaths": [
+    "**/.fleet/generated/**",
+    "**/.fleet/lock.json",
+    "**/.github/actions/setup-pnpm-deps/**",
+    "**/.github/actions/setup-pnpm-toolchain/**",
+    "**/.github/actions/setup-turbo-cache/**",
+    "**/.github/workflows/fleet-*.yml",
+    "**/configs/eslint/**",
+    "**/configs/oxfmt/**",
+    "**/configs/oxlint/**",
+    "**/configs/react-doctor/**",
+    "**/configs/typescript/**",
+    "**/configs/vitest/**",
+    "**/docker/fleet/**"
+  ],
   "rangeStrategy": "pin",
   "pinDigests": true,
   "internalChecksFilter": "strict",

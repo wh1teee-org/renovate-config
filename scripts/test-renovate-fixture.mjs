@@ -105,6 +105,11 @@ async function verifyWithPinnedRenovate() {
   );
   for (const [repository, profile] of Object.entries(repositoryProfiles)) {
     assert.equal(profile.rangeStrategy, "pin", `${repository} direct dependencies must remain exact-pinned`);
+    assert.deepEqual(
+      profile.ignorePaths,
+      base.ignorePaths,
+      `${repository} must preserve the non-mergeable Fleet-owned path exclusions`,
+    );
     const majorRule = profile.packageRules.find((rule) => rule.matchUpdateTypes?.includes("major"));
     assert.equal(majorRule?.dependencyDashboardApproval, true, `${repository} majors must require dashboard approval`);
     assert.equal(majorRule?.automerge, false, `${repository} majors must never automerge`);
@@ -247,6 +252,9 @@ async function verifyWithPinnedRenovate() {
   for (const name of ["security", "native", "eslint", "ts6", "ts7", "turbo", "vite", "vitest", "pnpmAction", "nodeRuntime"]) {
     assert.equal((await evaluate(cases[name])).automerge, false, `${name} updates must never automerge`);
   }
+  for (const name of ["eslint", "ts6", "ts7", "turbo", "vite", "vitest", "nodeRuntime"]) {
+    assert.equal((await evaluate(cases[name])).enabled, false, `${name} must stay on the Fleet platform-wave plane`);
+  }
   assert.equal((await evaluate(cases.ts6)).groupName, "typescript 6 api lane");
   assert.equal((await evaluate(cases.ts7)).groupName, "typescript 7 native lane");
   assert.equal((await evaluate(cases.vite)).groupName, "vite and vitest");
@@ -260,6 +268,8 @@ async function verifyWithPinnedRenovate() {
   assert.equal(peerPolicy.automerge, false, "Renovate peer updates must require review");
 
   assert.equal(konergyEffective.enabled, true, "Konergy must remain enabled after its immutable-lockfile CI guard landed");
+  assert.deepEqual(konergyEffective.ignorePaths, base.ignorePaths, "Konergy must preserve global Fleet-owned exclusions");
+  assert.deepEqual(konergyEffective.npm?.ignorePaths, ["packages/llm/**"], "Konergy must keep its npm-only LLM exclusion");
   assert.equal(konergyEffective.lockFileMaintenance.enabled, false);
   assert.ok(!(konergyEffective.postUpdateOptions ?? []).includes("pnpmDedupe"));
   assert.equal((await applyPackageRules({ ...konergyEffective, ...cases.ordinary })).automerge, false);
