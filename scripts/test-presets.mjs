@@ -18,6 +18,21 @@ assert.equal(base.ignoreTests, false, "automerge must require real repository ch
 assert.equal(base.platformAutomerge, false, "Renovate must decide merges after evaluating its full policy");
 assert.ok(base.commitHourlyLimit > 0, "CI-triggering commits must be rate-limited");
 assert.ok(base.prConcurrentLimit >= base.commitHourlyLimit, "open PR capacity must not be below the hourly commit rate");
+assert.deepEqual(base.ignorePaths, [
+  "**/.fleet/generated/**",
+  "**/.fleet/lock.json",
+  "**/.github/actions/setup-pnpm-deps/**",
+  "**/.github/actions/setup-pnpm-toolchain/**",
+  "**/.github/actions/setup-turbo-cache/**",
+  "**/.github/workflows/fleet-*.yml",
+  "**/configs/eslint/**",
+  "**/configs/oxfmt/**",
+  "**/configs/oxlint/**",
+  "**/configs/react-doctor/**",
+  "**/configs/typescript/**",
+  "**/configs/vitest/**",
+  "**/docker/fleet/**"
+], "background Renovate must not rewrite Fleet-owned generated surfaces");
 
 const onlyAutomergeRule = base.packageRules.filter((rule) => rule.automerge === true);
 assert.equal(onlyAutomergeRule.length, 1, "automerge must stay restricted to one proven low-risk rule");
@@ -35,6 +50,23 @@ assert.equal(foundryAuthorityRule?.enabled, false, "ordinary Renovate updates mu
 assert.equal(foundryAuthorityRule?.automerge, false);
 
 const nodeRules = node.packageRules;
+const platformAuthorityRule = nodeRules.find((rule) => rule.description === "Keep Fleet toolchain versions on the approved platform-wave plane");
+assert.deepEqual(platformAuthorityRule?.matchPackageNames, [
+  "node",
+  "pnpm",
+  "turbo",
+  "vite",
+  "vitest",
+  "eslint",
+  "oxlint",
+  "oxfmt",
+  "react-doctor",
+  "typescript",
+  "@typescript/typescript6"
+]);
+assert.equal(platformAuthorityRule?.enabled, false, "background Renovate must not race Fleet toolchain authority");
+assert.equal(platformAuthorityRule?.automerge, false);
+
 const peerRule = nodeRules.find((rule) => rule.matchDepTypes?.includes("peerDependencies"));
 assert.equal(peerRule?.rangeStrategy, "widen", "peer ranges must never be exact-pinned");
 assert.equal(peerRule?.automerge, false, "peer changes require review");
@@ -58,7 +90,8 @@ assert.deepEqual(pnpmActionRule?.matchPackageNames, ["pnpm/action-setup"]);
 
 assert.ok(pnpm.postUpdateOptions.includes("pnpmDedupe"), "pnpm lockfiles must be deduplicated after updates");
 assert.equal(konergy.enabled, true, "Konergy must remain onboardable after its immutable-lockfile CI guard landed");
-assert.deepEqual(konergy.ignorePaths, ["packages/llm/**"], "deprecated Konergy LLM code must remain untouched");
+assert.equal(konergy.ignorePaths, undefined, "Konergy must not replace the non-mergeable global Fleet ignorePaths");
+assert.deepEqual(konergy.npm?.ignorePaths, ["packages/llm/**"], "deprecated Konergy LLM code must remain untouched");
 assert.equal(konergy.lockFileMaintenance.enabled, false, "Konergy shared-lockfile maintenance must remain disabled");
 assert.equal(konergy.packageRules.at(-1)?.automerge, false, "Konergy updates must always be human-merged");
 assert.ok(!athleteos.enabledManagers.includes("npm"), "AthleteOS must remain a Python/Gradle repository");

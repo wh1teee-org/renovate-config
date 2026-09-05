@@ -83,8 +83,17 @@ workflow uses no secrets, checkout, or action.
 - `@product-foundry/*` packages are excluded from ordinary Renovate updates;
   Product Foundry release classification, affected-consumer delivery, and exact
   consumer proof remain the only authority for those pins.
-- TypeScript's TS6 compiler-API alias and TS7 native typecheck alias are separate
-  approval lanes.
+- Fleet-generated surfaces (`.fleet/generated`, `.fleet/lock.json`, Fleet-owned
+  actions/workflows/config directories, and `docker/fleet`) are excluded from
+  background Renovate scanning. Action pins in those files move only through the
+  Fleet authority and its generated-vendored consumer wave.
+- Fleet toolchain identities (Node, pnpm, Turbo, Vite/Vitest, ESLint,
+  Oxlint/Oxfmt, React Doctor, and both TypeScript compiler identities) are
+  disabled on the ordinary Renovate plane. Their accepted versions come from
+  Fleet authority and an explicitly approved platform wave; ordinary Renovate
+  continues to own unrelated dependency maintenance. TS6 compiler-API and TS7
+  native typecheck remain distinct compatibility identities, not one shared
+  version field.
 - Compatibility families are grouped; majors, native ABI packages, database,
   auth, and security-sensitive changes remain reviewed.
 - Only mature dev-only patch updates may automerge, after fourteen release days
@@ -92,9 +101,12 @@ workflow uses no secrets, checkout, or action.
   GitHub's platform-native automerge. All other updates remain human-merged;
   every Konergy update remains human-merged and must pass its lockfile-closure
   invariant.
-- Branch creation is limited to Minsk nights/weekends. Two commits per hour per
-  repository prevents rebase storms while host admission controls actual runner
-  capacity.
+- Background Renovate branch creation is limited to Minsk nights/weekends. Two
+  commits per hour per repository prevents rebase storms while host admission
+  controls actual runner capacity. An explicitly approved Fleet platform wave is
+  not a Renovate update and therefore does not inherit this schedule or these
+  bot rate limits; its own dry-run, immutable-ref, allowlist, PR, and review
+  gates remain mandatory.
 
 ## Validation and rollback
 

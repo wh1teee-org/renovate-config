@@ -134,22 +134,12 @@
       "automerge": false
     },
     {
-      "description": "Keep ESLint 9 and typescript-eslint 8 compatible with the TS6 API lane",
+      "description": "Keep typescript-eslint 8 on its reviewed compatibility lane while Fleet owns ESLint itself",
       "matchPackageNames": [
-        "eslint",
         "typescript-eslint",
-        "/^@eslint\\//",
         "/^@typescript-eslint\\//"
       ],
-      "groupName": "eslint toolchain",
-      "automerge": false
-    },
-    {
-      "description": "Do not propose ESLint 10 until repository plugin compatibility is proven",
-      "matchPackageNames": [
-        "eslint"
-      ],
-      "allowedVersions": ">=9.0.0 <10.0.0",
+      "groupName": "typescript-eslint toolchain",
       "automerge": false
     },
     {
@@ -184,6 +174,24 @@
       ],
       "groupName": null,
       "dependencyDashboardApproval": true,
+      "automerge": false
+    },
+    {
+      "description": "Keep Fleet toolchain versions on the approved platform-wave plane",
+      "matchPackageNames": [
+        "node",
+        "pnpm",
+        "turbo",
+        "vite",
+        "vitest",
+        "eslint",
+        "oxlint",
+        "oxfmt",
+        "react-doctor",
+        "typescript",
+        "@typescript/typescript6"
+      ],
+      "enabled": false,
       "automerge": false
     }
   ]

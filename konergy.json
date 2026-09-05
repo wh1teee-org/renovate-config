@@ -1,9 +1,11 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "enabled": true,
-  "ignorePaths": [
-    "packages/llm/**"
-  ],
+  "npm": {
+    "ignorePaths": [
+      "packages/llm/**"
+    ]
+  },
   "lockFileMaintenance": {
     "enabled": false
   },
